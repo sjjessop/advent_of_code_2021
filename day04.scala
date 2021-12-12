@@ -47,5 +47,15 @@ object day04 {
     val result = winner.score * draw
     checkAnswer(4, 1, result)
 
+    @annotation.tailrec
+    def findLastWinner(draws: List[Int], boards: List[Board]): (Board, Int) = {
+      val draw = draws.head
+      val newBoards = boards.map(_.mark(draw))
+      val liveBoards = newBoards.filter(!_.hasWon)
+      if (liveBoards == Nil) (newBoards.head, draw) else findLastWinner(draws.tail, liveBoards)
+    }
+    val (loser, draw2) = findLastWinner(draws, boards)
+    val result2 = loser.score * draw2
+    checkAnswer(4, 2, result2)
   }
 }
