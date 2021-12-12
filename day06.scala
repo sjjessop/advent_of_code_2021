@@ -7,6 +7,7 @@ object day06 {
     def evolved: School = {
       val parents = fish.getOrElse(0, 0L)
       val seveners = fish.getOrElse(7, 0L)
+      if ((seveners + parents) >= (1L << 58)) throw new Exception("approaching overflow")
       new School(
         (fish - 0)
         .map{case (k, v) => (k-1, v)}
@@ -26,5 +27,8 @@ object day06 {
     val school = School(ages)
     val result = (1 to 80).foldLeft(school)((s, idx) => s.evolved).total
     checkAnswer(6, 1, result)
+
+    val result2 = (1 to 256).foldLeft(school)((s, idx) => s.evolved).total
+    checkAnswer(6, 2, result2)
   }
 }
