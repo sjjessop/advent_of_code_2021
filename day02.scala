@@ -27,9 +27,21 @@ object day02 {
     }
   }
 
+  case class AimedPosition(distance: Long = 0, depth: Long = 0, aim: Long = 0) {
+    def product = distance * depth
+    def exec(cmd: Command): AimedPosition = cmd.verb match {
+      case Verbs.forward => AimedPosition(distance + cmd.value, depth + aim * cmd.value, aim)
+      case Verbs.up => AimedPosition(distance, depth, aim - cmd.value)
+      case Verbs.down => AimedPosition(distance, depth, aim + cmd.value)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     val commands = readLines("day_02_input.txt").map(Command.parse)
     val result = commands.foldLeft(Position())((pos, cmd) => pos.exec(cmd)).product
     checkAnswer(2, 1, result)
+
+    val result2 = commands.foldLeft(AimedPosition())((pos, cmd) => pos.exec(cmd)).product
+    checkAnswer(2, 2, result2)
   }
 }
