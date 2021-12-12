@@ -20,5 +20,8 @@ object day01 {
     def isDrop(vals: List[Int]) = vals(0) < vals(1)
     val drops = depths.sliding(2).count(isDrop _)
     checkAnswer(1, 1, drops)
+
+    val windowDrops = depths.sliding(3).map(_.sum).toList.sliding(2).count(isDrop _)
+    checkAnswer(1, 2, windowDrops)
   }
 }
