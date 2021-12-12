@@ -64,6 +64,7 @@ object day05 {
       "5,5 -> 8,2",
     )
     assert(countMultiples(testVents.flatMap(Line.parse)) == 5)
+    assert(countMultiples(testVents.map(Line.parseAny)) == 12)
   }
 
   def main(args: Array[String]): Unit = {
@@ -72,5 +73,8 @@ object day05 {
     val vents = readLines("day_05_input.txt")
     val result = countMultiples(vents.flatMap(Line.parse))
     checkAnswer(5, 1, result)
+
+    val result2 = countMultiples(vents.map(Line.parseAny))
+    checkAnswer(5, 2, result2)
   }
 }
