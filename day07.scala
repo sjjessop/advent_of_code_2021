@@ -9,5 +9,10 @@ object day07 {
     val cost = crabs.map(x => (median - x).abs).sum
     checkAnswer(7, 1, cost)
 
+    // New cost rule is quadratic, so maybe the mean is the correct answer? If not then it's close.
+    val mean = crabs.sum / crabs.length
+    val triCost = crabs.map(x => (mean - x).abs).map(n => (n * (n + 1)) / 2).sum
+    // That was a cheap win.
+    checkAnswer(7, 2, triCost)
   }
 }
