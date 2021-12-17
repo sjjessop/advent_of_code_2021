@@ -18,6 +18,7 @@ object day05 {
 
   case class Direction(x: Int, y: Int) {
     def *(other: Int): Direction = Direction(x * other, y * other)
+    def +(other: Direction) = Direction(x + other.x, y + other.y)
     def sign = Direction(x.sign, y.sign)
   }
   val up = Direction(0, 1)
