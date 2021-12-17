@@ -20,17 +20,26 @@ object day12 {
     }
   }
 
-  case class Route(path: List[String]) {
-    val at = path.head
-    lazy val blocked: Set[String] = path.filter(_.head.isLower).toSet
-    def advance(exits: List[String]): List[Route] = {
-      if (at == "end") List(this) else {
-        exits.filter(!blocked.contains(_)).map(x => Route(x::path))
-      }
+  type Rule = List[String] => Set[String]
+  def oneRule(path: List[String]): Set[String] = path.filter(_.head.isLower).toSet
+  def twoRule(path: List[String]): Set[String] = {
+    val previous = oneRule(path)
+    if (previous.map(name => path.count(_ == name) > 1).contains(true)) {
+      previous
+    } else {
+      Set("start")
     }
   }
 
-  val startRoute = Route("start"::Nil)
+  case class Route(path: List[String], blockRule: Rule) {
+    val at = path.head
+    lazy val blocked: Set[String] = blockRule(path)
+    def advance(exits: List[String]): List[Route] = {
+      if (at == "end") List(this) else {
+        exits.filter(!blocked.contains(_)).map(x => Route(x::path, blockRule))
+      }
+    }
+  }
 
   sealed case class Graph(edges: List[Edge]) {
     lazy val caves: Map[String, Cave] = {
@@ -44,15 +53,15 @@ object day12 {
     }
 
     @annotation.tailrec
-    def routes(sofar: Set[Route] = Set(startRoute)): Set[Route] = {
+    def routes(sofar: Set[Route]): Set[Route] = {
       val advanced: Set[Route] = sofar.flatMap(route => route.advance(caves(route.at).exits))
       if ((advanced union sofar).size == sofar.size) advanced else routes(advanced)
     }
   }
 
-  def solve(lines: List[String]) = {
+  def solve(lines: List[String], rule: Rule = oneRule) = {
     val system = Graph(lines.map(Edge.parse))
-    system.routes().filter(_.at == "end").size
+    system.routes(Set(Route("start"::Nil, rule))).filter(_.at == "end").size
   }
 
   def test(): Unit = {
@@ -65,6 +74,15 @@ object day12 {
       "A-end",
       "b-end",
     )) == 10)
+    assert(solve(List(
+      "start-A",
+      "start-b",
+      "A-c",
+      "A-b",
+      "b-d",
+      "A-end",
+      "b-end",
+    ), twoRule) == 36)
   }
 
   def main(args: Array[String]): Unit = {
@@ -72,5 +90,8 @@ object day12 {
 
     val routeCount = solve(readLines("day_12_input.txt"))
     checkAnswer(12, 1, routeCount)
+
+    val routeCountTwo = solve(readLines("day_12_input.txt"), twoRule)
+    checkAnswer(12, 2, routeCountTwo)
   }
 }
