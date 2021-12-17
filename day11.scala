@@ -39,6 +39,7 @@ object day11 {
       val (count, newEnergy) = getFlashes(incremented)
       (count, new Cavern(newEnergy.mapValues(x => if (x > 9) 0 else x).toMap))
     }
+    def size = energy.size
   }
 
   object Cavern {
@@ -56,5 +57,8 @@ object day11 {
     val cave = Cavern.parse(readLines("day_11_input.txt"))
     val total = Iterator.unfold(cave)(c => Some(c.step)).take(100).sum
     checkAnswer(11, 1, total)
+
+    val firstSync = Iterator.unfold(cave)(c => Some(c.step)).takeWhile(_ < cave.size).count(x => true) + 1
+    checkAnswer(11, 2, firstSync)
   }
 }
