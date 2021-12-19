@@ -73,7 +73,7 @@ object day16 {
     val literalValue: Read[Long] = {
       literalParts.map(is => {
         if (is.size > 15) throw new Exception("overflow")
-        is.foldLeft(0)((acc, n) => acc * 16 + n)
+        is.foldLeft(0L)((acc, n) => acc * 16 + n)
       })
     }
 
@@ -138,6 +138,12 @@ object day16 {
 
     assert(Read.packet(getBits(List("D2FE28")))._1 == LiteralPacket(version=6, value=2021))
     assert(Read.packet(getBits(List("38006F45291200")))._1 == OperatorPacket(1, 6, List(LiteralPacket(6,10), LiteralPacket(2, 20))))
+
+    // How embarrassing
+    val bigLiteralBits = "0001001111111111111111111111111111111111101111".toList.map(_.toString.toInt)
+    assert(Read.literalValue(bigLiteralBits.drop(6))._1 == 4294967295L)
+    assert(Read.literalPacket(0)(bigLiteralBits.drop(6))._1.value == 4294967295L)
+    assert((Read.packet(bigLiteralBits)._1 match {case x: LiteralPacket => x.value; case _ => 0}) == 4294967295L)
   }
 
   def main(args: Array[String]): Unit = {
