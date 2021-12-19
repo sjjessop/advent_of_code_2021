@@ -114,6 +114,7 @@ object day16 {
 
   sealed trait Packet {
     def versionSum: Int
+    def evaluate: Long
   }
   object Packet {
     val LITERAL = 4
@@ -121,10 +122,30 @@ object day16 {
   case class LiteralPacket(version: Int, value: Long) extends Packet {
     val typeID = Packet.LITERAL
     def versionSum: Int = version
+    def evaluate: Long = value
   }
   case class OperatorPacket(version: Int, typeID: Int, subPackets: List[Packet]) extends Packet {
     def versionSum: Int = version + subPackets.map(_.versionSum).sum
+
+    lazy val subEvaluate = subPackets.map(_.evaluate)
+
+    def subOp(func: (Long, Long) => Boolean) = subEvaluate match {
+      case left::right::Nil => if (func(left, right)) 1 else 0
+      case _ => throw new Exception("bad")
+    }
+
+    def evaluate: Long = typeID match {
+      case 0 => subEvaluate.sum
+      case 1 => subEvaluate.product
+      case 2 => subEvaluate.min
+      case 3 => subEvaluate.max
+      case 5 => subOp(_ > _)
+      case 6 => subOp(_ < _)
+      case 7 => subOp(_ == _)
+     }
   }
+
+  def parse(s: String) = Read.packet(getBits(List(s)))._1
 
   def test(): Unit = {
     val bits = List(1, 0, 1, 0, 1, 1)
@@ -136,14 +157,23 @@ object day16 {
     assert(Read.bits(4)(bits)._1 == 8 * bits(0) + 4 * bits(1) + 2 * bits(2) + bits(3))
     assert(Read.bits(4)(bits)._2 == bits.drop(4))
 
-    assert(Read.packet(getBits(List("D2FE28")))._1 == LiteralPacket(version=6, value=2021))
-    assert(Read.packet(getBits(List("38006F45291200")))._1 == OperatorPacket(1, 6, List(LiteralPacket(6,10), LiteralPacket(2, 20))))
+    assert(parse("D2FE28") == LiteralPacket(version=6, value=2021))
+    assert(parse("38006F45291200") == OperatorPacket(1, 6, List(LiteralPacket(6,10), LiteralPacket(2, 20))))
 
     // How embarrassing
     val bigLiteralBits = "0001001111111111111111111111111111111111101111".toList.map(_.toString.toInt)
     assert(Read.literalValue(bigLiteralBits.drop(6))._1 == 4294967295L)
     assert(Read.literalPacket(0)(bigLiteralBits.drop(6))._1.value == 4294967295L)
     assert((Read.packet(bigLiteralBits)._1 match {case x: LiteralPacket => x.value; case _ => 0}) == 4294967295L)
+
+    assert(parse("C200B40A82").evaluate == 3)
+    assert(parse("04005AC33890").evaluate == 54)
+    assert(parse("880086C3E88112").evaluate == 7)
+    assert(parse("CE00C43D881120").evaluate == 9)
+    assert(parse("D8005AC2A8F0").evaluate == 1)
+    assert(parse("F600BC2D8F").evaluate == 0)
+    assert(parse("9C005AC2F8F0").evaluate == 0)
+    assert(parse("9C0141080250320F1802104A08").evaluate == 1)
   }
 
   def main(args: Array[String]): Unit = {
@@ -153,5 +183,8 @@ object day16 {
     val message = Read.packet(bits)._1
     val versionTotal = message.versionSum
     checkAnswer(16, 1, versionTotal)
+
+    val versionEval = message.evaluate
+    checkAnswer(16, 2, versionEval)
   }
 }
