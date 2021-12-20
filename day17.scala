@@ -30,19 +30,21 @@ object day17 {
   case class Probe(pos: Pos, velocity: Direction) {}
 
   case class Path(dx: Int, dy: Int) {
-    assert(dy >= 0)
-
     // The furthest the probe can travel in the x-direction, due to drag
     val maxX = triangle(dx)
     // y-direction is unimpeded by drag(!), but if we start upwards and
     // accelerate down then it's still bounded above.
-    val maxY = triangle(dy)
+    val maxY = if (dy >= 0) triangle(dy) else 0
 
     // If the probe starts with velocity (dx,dy), dy >= 0, then at time
     // 2 * dy + 1 it is back on the x-axis. Call this step "reentry". Since the
     // target is below the x-axis, it has not hit the target yet.
-    val reentry: Probe = after(2 * dy + 1)
-    assert(reentry.pos.y == 0)
+    lazy val reentry: Probe = {
+      assert(dy >= 0)
+      val result = after(2 * dy + 1)
+      assert(result.pos.y == 0)
+      result
+    }
 
     def after(t: Int): Probe = {
       val velocity = Direction(math.max(dx - t, 0), dy - t)
@@ -54,11 +56,12 @@ object day17 {
     }
 
     def hits(target: Target): Boolean = {
-      val steps = Iterator.unfold(2 * dy + 1)(t => {
+      val start = if (dy >= 0) 2 * dy + 1 else 1
+      val steps = Iterator.unfold(start)(t => {
         val probe = after(t)
         if (probe.pos.y < target.bottom) None else Some((probe, t+1))
       })
-      steps.map(probe => target.contains(probe.pos)).contains(true)
+      steps.exists(probe => target.contains(probe.pos))
     }
   }
 
@@ -89,5 +92,14 @@ object day17 {
     val winners = paths.filter(_.hits(target))
     val result = winners.head.maxY
     checkAnswer(17, 1, result)
+
+    // Drat, now we need to include negative dy as well, so we can't rely on
+    // reentry to bound things. But everything is pretty fast, so OK.
+    val paths2 = for (
+      dy <- target.bottom - 1 to -target.bottom;
+      dx <- target.minX to target.right + 1
+    ) yield Path(dx, dy)
+    val count = paths2.filter(_.hits(target)).size
+    checkAnswer(17, 2, count)
   }
 }
