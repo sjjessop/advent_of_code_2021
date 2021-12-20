@@ -192,7 +192,12 @@ object day18 {
   def main(args: Array[String]): Unit = {
     test()
 
-    val result = readLines("day_18_input.txt").map(Snail.parse).reduceLeft(_+_).magnitude()
+    val nums = readLines("day_18_input.txt").map(Snail.parse)
+    val result = nums.reduceLeft(_+_).magnitude()
     checkAnswer(18, 1, result)
+
+    val pairs = (for(a <- nums; b <- nums) yield (a, b)).filter(p => p._1 != p._2)
+    val result2 = pairs.map(p => p._1 + p._2).map(_.magnitude()).max
+    checkAnswer(18, 2, result2)
   }
 }
