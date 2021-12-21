@@ -231,5 +231,11 @@ object day19 {
     val allBeacons = solution.map(fix).flatMap(_.beacons).toSet
     val result = allBeacons.size
     checkAnswer(19, 1, result)
+
+    def manhatten(d: Direction) = (Pos(0,0,0) + d).coords.map(_.abs).sum
+    val scannerPositions = solution.map(_._2(Pos(0,0,0)))
+    val distances = for (a <- scannerPositions; b <- scannerPositions) yield manhatten(a - b)
+    val result2 = distances.max
+    checkAnswer(19, 2, result2)
   }
 }
