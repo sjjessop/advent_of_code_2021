@@ -113,5 +113,8 @@ object day20 {
     val window = Window.parse(readLines("day_20_input.txt"))
     val result = window.step(2).litCount
     checkAnswer(20, 1, result)
+
+    val result2 = window.step(50).litCount
+    checkAnswer(20, 2, result2)
   }
 }
