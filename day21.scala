@@ -43,14 +43,17 @@ object day21 {
     val result = realGame.play(d100()).result
     checkAnswer(21, 1, result)
 
-    val rollThrice = for (a <- 1 to 3; b <- 1 to 3; c <- 1 to 3) yield List(a,b,c)
+    val rollThrice = (
+      for (a <- 1 to 3; b <- 1 to 3; c <- 1 to 3) yield List(a,b,c)
+    ).groupBy(_.sum).view.mapValues(_.size).toMap
 
     @annotation.tailrec
     def loop(universes: Map[Game, Long], winners: Seq[Long] = Seq(0, 0)): Seq[Long] = {
       // println(s"${universes.size} ${winners}")
       if (universes.isEmpty) winners
       else {
-        val games = for ((game, count) <- universes.view; roll <- rollThrice) yield (game.move(roll), count)
+        val games = for ((game, count) <- universes.view; (roll, rollCount) <- rollThrice)
+          yield (game.move(List(roll)), count * rollCount)
         val next = {
           // Accumulate still-running games and (separately) winners
           val mutableUniverses = mutable.Map.empty[Game, Long]
