@@ -14,6 +14,16 @@ object day22 {
       math.min(zMax, n),
     )
     def poses = for (x <- xMin to xMax; y <- yMin to yMax; z <- zMin to zMax) yield Pos(x,y,z)
+    def isEmpty = (xMax < xMin) || (yMax < yMin) || (zMax < zMin)
+    def size: Long = if (isEmpty) 0L else (xMax - xMin + 1).toLong * (yMax - yMin + 1).toLong * (zMax - zMin + 1).toLong
+    def intersect(other: Block) = Block(
+      math.max(xMin, other.xMin),
+      math.min(xMax, other.xMax),
+      math.max(yMin, other.yMin),
+      math.min(yMax, other.yMax),
+      math.max(zMin, other.zMin),
+      math.min(zMax, other.zMax),
+    )
   }
 
   object Block {
@@ -39,6 +49,7 @@ object day22 {
 
   case class Instruction(block: Block, setValue: Int) {
     def trim(n: Int) = Instruction(block.trim(n), setValue)
+    def lit: Long = block.size * setValue
   }
 
   object Instruction {
@@ -59,9 +70,76 @@ object day22 {
     }).toMap.values.count(_ == 1)
   }
 
+  def combine(left: Instruction, right: Instruction): List[Instruction] = {
+    // We know the right instruction will be added into the total later (well,
+    // if it's "off" we'll skip it for efficiency, but added in effect). Our
+    // job is to account for everything except that.
+    //
+    // Therefore return a list containing this instruction, and another
+    // instruction that reverses the effect of this instruction for the
+    // intersection between the two.
+    //
+    // Then, when everything is put together the result will be that on the
+    // intersection of the two instructions, the right takes effect, while on
+    // the points only in one of the two, that one takes effect. Which is the
+    // correct semantics for the instructions.
+    //
+    // The points of the intersection will be present in the list both in the
+    // intersection and as part of each of "left" and "right", but will cancel
+    // out in the total (Inclusion-Exclusion principle).
+    val intersect = (
+      List(left.block intersect right.block)
+      // Optimisation - don't create empty blocks that will need processing later.
+      .filter(!_.isEmpty)
+      // Slight abuse of Instruction here: allowing negative values means we're
+      // now treating it as something that is totalled, rather than something
+      // where the last value takes precedence. But otherwise it's the same
+      // type, so just use it.
+      .map(b => Instruction(b, -1 * left.setValue))
+    )
+    left::intersect
+  }
+
+  def addInstruction(insns: List[Instruction], newInsn: Instruction): List[Instruction] = {
+    // println(s"adding to ${insns.size}")
+    val previous = insns.flatMap(insn => combine(insn, newInsn))
+    newInsn.setValue match {
+      case 1 => newInsn::previous
+      // Optimisation - don't create 0 blocks that will need processing later.
+      case 0 => previous
+      // newInsn must be a parsed Instruction, not the fake -1s from combination.
+      case _ => ???
+    }
+  }
+
+  def combineAll(program: List[Instruction]) = {
+    program.foldLeft(List.empty[Instruction])(addInstruction)
+  }
+
+  def runAll(program: List[Instruction]) = combineAll(program).map(_.lit).sum
+
+  def test(program: List[Instruction], expected: Long): Unit = {
+    val examples = List(
+      "on x=10..12,y=10..12,z=10..12",
+      "on x=11..13,y=11..13,z=11..13",
+      "off x=9..11,y=9..11,z=9..11",
+      "on x=10..10,y=10..10,z=10..10",
+    ).map(Instruction.parse)
+    assert((combine(examples(0), examples(1)) :+ examples(1)).map(_.lit) == List(27, -8, 27))
+    assert(runAll(examples.take(2)) == 27 + 19)
+    assert(runAll(examples.take(3)) == 27 + 19 - 8)
+    assert(runAll(examples.take(4)) == 27 + 19 - 8 + 1)
+    assert(runAll(program.map(_.trim(50)).filter(!_.block.isEmpty)) == expected)
+  }
+
   def main(args: Array[String]): Unit = {
     val program = readLines("day_22_input.txt").map(Instruction.parse)
     val onCount = run(program.map(_.trim(50)))
     checkAnswer(22, 1, onCount)
+
+    test(program, onCount)
+
+    val result = runAll(program)
+    checkAnswer(22, 2, result)
   }
 }
