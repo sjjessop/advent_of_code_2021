@@ -8,7 +8,8 @@ jobs:
 
       - name: Install
         run: |
-          sudo apt-get install scala
+          sudo wget -q https://downloads.lightbend.com/scala/2.13.7/scala-2.13.7.deb
+          sudo dpkg -i scala-2.13.7.deb
 
       - name: Check versions
         run: |
