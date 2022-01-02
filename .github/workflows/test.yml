@@ -23,5 +23,5 @@ jobs:
         env:
           INPUTS_PASSPHRASE: ${{ secrets.INPUTS_PASSPHRASE }}
 
-      - name: Run
-        run: scala -deprecation day01.scala
+      - name: Run tests
+        run: ./test.sh > /dev/null

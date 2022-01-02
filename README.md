@@ -1,5 +1,8 @@
 # Advent of Code 2021
 
+
+[![Test status](https://github.com/sjjessop/advent_of_code_2021/workflows/test/badge.svg)](https://github.com/sjjessop/advent_of_code_2021/actions)
+
 Solutions to the problems from https://adventofcode.com/2021
 
 Most of the code won't make much sense unless you've read the problem
