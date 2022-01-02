@@ -16,5 +16,12 @@ jobs:
           java -version
           scala -version
 
+      - name: Extract input and answer files
+        run: |
+          gpg --quiet --batch --yes --decrypt --output inputs.tar.gz --passphrase="$INPUTS_PASSPHRASE" inputs.tar.gz.gpg
+          tar -xvf inputs.tar.gz
+        env:
+          INPUTS_PASSPHRASE: ${{ secrets.INPUTS_PASSPHRASE }}
+
       - name: Run
         run: scala -deprecation day01.scala
