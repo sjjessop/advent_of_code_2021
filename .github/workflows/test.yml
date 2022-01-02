@@ -1,0 +1,19 @@
+name: test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install
+        run: |
+          sudo apt-get install scala
+
+      - name: Check versions
+        run: |
+          java -version
+          scala -version
+
+      - name: Run
+        run: scala -deprecation day01.scala
